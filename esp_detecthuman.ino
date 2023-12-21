@@ -1,7 +1,3 @@
-/*
-* Ultrasonic Sensor HC-SR04 interfacing with  ESP32 
-*
-*/
 
 /* Define the names for ESP32 pin for HC-SR04*/
 #define trigger_pin 5
@@ -43,4 +39,35 @@ void loop() {
   Serial.print(distance);
   Serial.println(" cm");
   delay(1000);
+}
+
+#include <ESP32Servo.h>
+
+Servo myservo;  // create servo object to control a servo
+int pos = 0;
+
+int servoPin = 26;
+
+void setup()
+{
+  // Allow allocation of all timers
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  myservo.setPeriodHertz(50);    // standard 50 hz servo
+  myservo.attach(servoPin, 544, 2400); // attaches the servo on pin 18 to the servo object
+}
+
+void loop() 
+{
+  for (pos = 0; pos <= 180; pos += 3) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);    // tell servo to go to position in variable 'pos'
+    delay(15);             // waits 15ms for the servo to reach the position
+  }
+  for (pos = 180; pos >= 0; pos -= 3) { // goes from 180 degrees to 0 degrees
+    myservo.write(pos);    // tell servo to go to position in variable 'pos'
+    delay(15);             // waits 15ms for the servo to reach the position
+  }
 }
