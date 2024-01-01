@@ -1,14 +1,21 @@
 #include <ESP32Servo.h>
-
+    
 /* Define the names for ESP32 pin for HC-SR04*/
 #define trigger_pin 5
 #define Echo_pin 18
 #define Servo_pin 26
+#define Pir_pin 19 // GPIO19 pin connected to OUTPUT pin of sensor
+
+//the time we give the sensor to calibrate (10-60 secs according to the datasheet)
+int calibrationTime = 30;  
+
 /* two variables to store duraion and distance value */
 long duration;
 int distance;
 Servo myservo;  // create servo object to control a servo
 int pos = 0;
+
+int PirStateCurrent   = LOW;  // current state of pin Pir
 
 /* configure D9 and D11 as digital input and output respectively */
 void setup() {
@@ -23,9 +30,22 @@ void setup() {
   ESP32PWM::allocateTimer(3);
   myservo.setPeriodHertz(50);    // standard 50 hz servo
   myservo.attach(Servo_pin, 544, 2400); // attaches the servo on pin 18 to the servo object
+
+  pinMode(Pir_pin, INPUT); // set ESP32 pin to input mode to read value from OUTPUT pin of sensor
+
+  //give the sensor some time to calibrate
+  Serial.print("calibrating sensor ");
+  for(int i = 0; i < calibrationTime; i++){
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println(" done");
+  Serial.println("SENSOR ACTIVE");
+  delay(50);
 }
 
 void loop() {
+
   digitalWrite(trigger_pin, LOW); //set trigger signal low for 2us
   delayMicroseconds(2);
 
@@ -49,49 +69,19 @@ void loop() {
       myservo.write(pos);    // tell servo to go to position in variable 'pos'
       delay(15);             // waits 15ms for the servo to reach the position
     }
+
+    PirStateCurrent = digitalRead(Pir_pin);   // read pir new state
+    if(PirStateCurrent == HIGH)
+    {
+      Serial.println("Detect!"); //detect rồi thì tiến hành bật rfid
+    } else if(PirStateCurrent == LOW)
+    {
+      Serial.println("None");
+    }
   }
   // print measured distance value on Arduino serial monitor
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  //Serial.print("Distance: ");
+  //Serial.print(distance);
+  //Serial.println(" cm");
   delay(1000);
 }
-
-#cam bien nhiet do.ino
-//the time we give the sensor to calibrate (10-60 secs according to the datasheet)
-int calibrationTime = 30;      
-
-const int PIN_TO_SENSOR = 19; // GPIO19 pin connected to OUTPUT pin of sensor
-int pinStateCurrent   = LOW;  // current state of pin
-int pinStatePrevious  = LOW;  // previous state of pin
-
-void setup() {
-  Serial.begin(115200);            // initialize serial
-  pinMode(PIN_TO_SENSOR, INPUT); // set ESP32 pin to input mode to read value from OUTPUT pin of sensor
-
-  
-  //give the sensor some time to calibrate
-  Serial.print("calibrating sensor ");
-    for(int i = 0; i < calibrationTime; i++){
-      Serial.print(".");
-      delay(1000);
-      }
-    Serial.println(" done");
-    Serial.println("SENSOR ACTIVE");
-    delay(50);
-}
-
-void loop() {
-  pinStateCurrent = digitalRead(PIN_TO_SENSOR);   // read new state
-
-  if(pinStateCurrent == HIGH)
-  {
-     Serial.println("Detect!");
-  } else if(pinStateCurrent == LOW)
-  {
-    Serial.println("None");
-  }
-  delay(10);
-}
-
-
